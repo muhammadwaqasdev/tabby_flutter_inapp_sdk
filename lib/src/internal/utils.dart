@@ -90,6 +90,13 @@ List<String> getLocalStringsNonStandard({
   }
 }
 
+const tabbyRejectionTextEn =
+    // ignore: lines_longer_than_80_chars
+    'Sorry, Tabby is unable to approve this purchase. Please use an alternative payment method for your order.';
+const tabbyRejectionTextAr =
+    // ignore: lines_longer_than_80_chars
+    'نأسف، تابي غير قادرة على الموافقة على هذه العملية. الرجاء استخدام طريقة دفع أخرى';
+
 String getPrice({
   required String price,
   required Currency currency,

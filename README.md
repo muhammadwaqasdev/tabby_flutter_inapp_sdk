@@ -65,8 +65,8 @@ Feel free to edit descriptions according to your App
     amount: '340',
     currency: Currency.aed,
     buyer: Buyer(
-      email: 'id.card.success@tabby.ai',
-      phone: '500000001',
+      email: 'card.success@tabby.ai', // use otp.success@tabby.ai to test rejection case
+      phone: '500000001', // use 500000002 to test rejection case
       name: 'Yazan Khalid',
       dob: '2019-08-24',
     ),
@@ -108,10 +108,20 @@ Feel free to edit descriptions according to your App
   ));
 ```
 
-3. Open on app browser to show checkout:
+3. Check session.status is different from `SessionStatus.rejected` and then open the in-app browser to show checkout:
 
 ```dart
   void openInAppBrowser() {
+    if (session.status == SessionStatus.rejected) {
+      final rejectionText =
+          lang == Lang.ar ? TabbySDK.rejectionTextAr : TabbySDK.rejectionTextEn;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(rejectionText),
+        ),
+      );
+      return;
+    }
     TabbyWebView.showWebView(
       context: context,
       webUrl: session.availableProducts.installments.webUrl,

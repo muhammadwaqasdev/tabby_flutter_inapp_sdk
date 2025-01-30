@@ -177,6 +177,7 @@ class SessionConfiguration {
 class CheckoutSession {
   CheckoutSession({
     required this.id,
+    required this.status,
     required this.payment,
     required this.configuration,
   });
@@ -184,12 +185,17 @@ class CheckoutSession {
   factory CheckoutSession.fromJson(Map<String, dynamic> json) {
     return CheckoutSession(
       id: json['id'],
+      status: SessionStatus.values.firstWhere(
+        (e) => e.name == json['status'],
+        orElse: () => SessionStatus.created,
+      ),
       payment: Identifiable.fromJson(json['payment']),
       configuration: SessionConfiguration.fromJson(json['configuration']),
     );
   }
 
   final String id;
+  final SessionStatus status;
   final Identifiable payment;
   final SessionConfiguration configuration;
 }
@@ -388,11 +394,13 @@ class TabbySessionAvailableProducts {
 
 class TabbySession {
   TabbySession({
+    required this.status,
     required this.sessionId,
     required this.paymentId,
     required this.availableProducts,
   });
 
+  final SessionStatus status;
   final String sessionId;
   final String paymentId;
   final TabbySessionAvailableProducts availableProducts;

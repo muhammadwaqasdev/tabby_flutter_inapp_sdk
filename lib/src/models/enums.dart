@@ -122,6 +122,11 @@ enum WebViewResult {
   expired,
 }
 
+enum SessionStatus {
+  created,
+  rejected,
+}
+
 enum AnalyticsEvent {
   snipperCardRendered, // = 'Snippet Cart Rendered',
   learnMoreClicked, // = 'Learn More Clicked',
