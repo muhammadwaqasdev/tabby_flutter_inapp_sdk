@@ -1,3 +1,8 @@
+# 1.8.0
+- `TabbyWebView` is now in charge of managing permissions requests asked by the web page. The `TabbyWebView` will ask for permissions only when needed
+- ❗ Important: please refer to Readme.md and update your integration to handle the new `TabbyWebView` behavior
+- Example app reworked to demonstrate the new `TabbyWebView` behavior 
+
 ## 1.7.0
 - Added `SessionStatus`
 - ❗ Important: The `TabbySession.status` can now be either `SessionStatus.rejected` or `SessionStatus.created`. Some customers may be rejected immediately after a session creation. You need to handle this scenario before opening `TabbyWebView`.
