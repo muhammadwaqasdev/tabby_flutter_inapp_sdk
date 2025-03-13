@@ -1,3 +1,6 @@
+# 1.8.1
+- Fixed typo in package description
+
 # 1.8.0
 - `TabbyWebView` is now in charge of managing permissions requests asked by the web page. The `TabbyWebView` will ask for permissions only when needed
 - ❗ Important: please refer to Readme.md and update your integration to handle the new `TabbyWebView` behavior
