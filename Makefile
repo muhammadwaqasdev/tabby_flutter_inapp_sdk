@@ -26,3 +26,6 @@ build_ios:
 build_both:
 	make build_android
 	make build_ios
+
+publish:
+	fvm dart pub publish
