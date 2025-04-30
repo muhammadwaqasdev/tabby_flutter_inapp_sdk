@@ -15,7 +15,7 @@ abstract class TabbyWithRemoteDataSource {
     Environment environment = Environment.production,
   });
 
-  /// Calls the https://api.tabby.dev/api/v2/checkout endpoint.
+  /// Calls the https://api.tabby.ai/api/v2/checkout endpoint.
   ///
   /// Throws a [ServerException] for all error codes.
   Future<TabbySession> createSession(TabbyCheckoutPayload payload);

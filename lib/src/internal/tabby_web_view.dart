@@ -1,18 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tabby_flutter_inapp_sdk/tabby_flutter_inapp_sdk.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 const tabbyColor = Color.fromRGBO(62, 237, 191, 1);
 
 typedef TabbyCheckoutCompletion = void Function(WebViewResult resultCode);
-
-final settings = InAppWebViewSettings(
-  applePayAPIEnabled: true,
-  useOnNavigationResponse: true,
-);
 
 class TabbyWebView extends StatefulWidget {
   const TabbyWebView({
@@ -49,11 +45,11 @@ class TabbyWebView extends StatefulWidget {
   }
 }
 
-extension TabbyPermissionResourceType on PermissionResourceType {
-  static Permission? toAndroidPermission(PermissionResourceType value) {
-    if (value == PermissionResourceType.CAMERA) {
+extension TabbyPermissionResourceType on WebViewPermissionResourceType {
+  static Permission? toAndroidPermission(WebViewPermissionResourceType value) {
+    if (value == WebViewPermissionResourceType.camera) {
       return Permission.camera;
-    } else if (value == PermissionResourceType.MICROPHONE) {
+    } else if (value == WebViewPermissionResourceType.microphone) {
       return Permission.microphone;
     } else {
       return null;
@@ -64,6 +60,57 @@ extension TabbyPermissionResourceType on PermissionResourceType {
 class _TabbyWebViewState extends State<TabbyWebView> {
   final GlobalKey webViewKey = GlobalKey();
   double _progress = 0;
+  late WebViewController _webViewController;
+
+  @override
+  void initState() {
+    super.initState();
+    _webViewController = WebViewController(
+      onPermissionRequest: (request) async {
+        final resources = request.platform.types.toList();
+        if (resources.isEmpty) {
+          return;
+        }
+
+        final permissions = Platform.isAndroid
+            ? resources
+                .map((r) {
+                  final permission =
+                      TabbyPermissionResourceType.toAndroidPermission(r);
+                  return permission;
+                })
+                .whereType<Permission>()
+                .toList()
+            : [Permission.camera, Permission.microphone];
+        final statuses = await permissions.request();
+        final isGranted = statuses.values.every((s) => s.isGranted);
+        final future = isGranted ? request.grant : request.deny;
+        await future();
+      },
+    )
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setOnConsoleMessage((message) {
+        if (kDebugMode) {
+          print('console.log: ${message.message}');
+        }
+      })
+      ..addJavaScriptChannel('tabbyMobileSDK', onMessageReceived: (message) {
+        if (kDebugMode) {
+          print('Got message from JS: ${message.message}');
+        }
+        javaScriptHandler(message.message, widget.onResult);
+      })
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            setState(() {
+              _progress = progress / 100;
+            });
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.webUrl));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,62 +124,9 @@ class _TabbyWebViewState extends State<TabbyWebView> {
           )
         ],
         Expanded(
-          child: InAppWebView(
-            key: webViewKey,
-            initialUrlRequest:
-                URLRequest(url: WebUri.uri(Uri.parse(widget.webUrl))),
-            initialSettings: settings,
-            onPermissionRequest: (controller, permissionRequest) async {
-              final resources = permissionRequest.resources;
-              final permissions = Platform.isAndroid
-                  ? resources
-                      .map((r) {
-                        final permission =
-                            TabbyPermissionResourceType.toAndroidPermission(r);
-                        return permission;
-                      })
-                      .whereType<Permission>()
-                      .toList()
-                  : [Permission.camera, Permission.microphone];
-              if (permissions.isEmpty) {
-                return PermissionResponse(
-                  action: PermissionResponseAction.GRANT,
-                  resources: resources,
-                );
-              }
-              final statuses = await permissions.request();
-              final isGranted = statuses.values.every((s) => s.isGranted);
-              return PermissionResponse(
-                action: isGranted
-                    ? PermissionResponseAction.GRANT
-                    : PermissionResponseAction.DENY,
-                resources: resources,
-              );
-            },
-            onProgressChanged: (
-              InAppWebViewController controller,
-              int progress,
-            ) {
-              setState(() {
-                _progress = progress / 100;
-              });
-            },
-            onNavigationResponse: (controller, response) async {
-              final nextUrl = response.response?.url?.toString() ?? '';
-              return navigationResponseHandler(
-                onResult: widget.onResult,
-                nextUrl: nextUrl,
-              );
-            },
-            onWebViewCreated: (controller) async {
-              controller.addJavaScriptHandler(
-                handlerName: 'tabbyMobileSDK',
-                callback: (message) => javaScriptHandler(
-                  message,
-                  widget.onResult,
-                ),
-              );
-            },
+          key: webViewKey,
+          child: WebViewWidget(
+            controller: _webViewController,
           ),
         ),
       ],

@@ -7,7 +7,7 @@ default_xcodeproj = "./Runner.xcodeproj"
 default_target_name = "Runner"
 
 platform :ios do
-  desc "Description of what the lane does"
+  desc "Uploading iOS build to TestFlight"
   lane :upload_testflight do |options|
     puts("🚀 Uploading to TestFlight has started")
 

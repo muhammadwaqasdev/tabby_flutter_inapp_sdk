@@ -2,8 +2,7 @@
 
 echo "Building iOS 🛠️"
 
-fvm use
-make pg
+make pre_build
 
 cd example
 

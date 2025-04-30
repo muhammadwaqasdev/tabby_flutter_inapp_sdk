@@ -18,7 +18,7 @@ class _NewSessionState extends State<NewSession> {
 
   String _amount = '340';
   late TextEditingController _amountController;
-  String _email = 'id.success@tabby.ai';
+  String _email = 'card.success@tabby.ai';
   late TextEditingController _emailController;
   String _phone = '+971500000001';
   late TextEditingController _phoneController;

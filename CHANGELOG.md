@@ -1,3 +1,7 @@
+# 1.9.0
+- Updating example app to the latest Flutter version
+- Migrating `TabbyWebView` from using `flutter_inappwebview` to more stable `webview_flutter`
+
 # 1.8.1
 - Fixed typo in package description
 

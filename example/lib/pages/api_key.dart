@@ -1,8 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tabby_flutter_inapp_sdk/tabby_flutter_inapp_sdk.dart';
 
+const _preConfiguredApiKey = String.fromEnvironment(
+  'demoapp.apiKey',
+  defaultValue: '',
+);
+
 class ApiKeyPage extends StatefulWidget {
-  const ApiKeyPage({Key? key}) : super(key: key);
+  const ApiKeyPage({super.key});
 
   @override
   State<ApiKeyPage> createState() => _ApiKeyPageState();
@@ -10,7 +16,7 @@ class ApiKeyPage extends StatefulWidget {
 
 class _ApiKeyPageState extends State<ApiKeyPage> {
   late TextEditingController _apiKeyController;
-  String _apiKey = '';
+  String _apiKey = kDebugMode ? _preConfiguredApiKey : '';
 
   void openNextPage() {
     TabbySDK().setup(withApiKey: _apiKey);
@@ -47,6 +53,8 @@ class _ApiKeyPageState extends State<ApiKeyPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Spacer(),
+            Text('Base url is ${Environment.production.host}'),
+            SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0, left: 12, right: 12),
               child: TextField(
