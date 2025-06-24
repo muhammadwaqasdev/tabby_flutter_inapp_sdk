@@ -1,30 +1,15 @@
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:tabby_flutter_inapp_sdk/src/internal/fixtures.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tabby_flutter_inapp_sdk/tabby_flutter_inapp_sdk.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void printError(Object error, StackTrace stackTrace) {
   debugPrint('Exception: $error');
   debugPrint('StackTrace: $stackTrace');
-}
-
-NavigationResponseAction navigationResponseHandler({
-  required TabbyCheckoutCompletion onResult,
-  required String nextUrl,
-}) {
-  if (nextUrl.contains(defaultMerchantUrls.cancel)) {
-    onResult(WebViewResult.close);
-    return NavigationResponseAction.CANCEL;
-  }
-  if (nextUrl.contains(defaultMerchantUrls.failure)) {
-    onResult(WebViewResult.rejected);
-    return NavigationResponseAction.CANCEL;
-  }
-  if (nextUrl.contains(defaultMerchantUrls.success)) {
-    onResult(WebViewResult.authorized);
-    return NavigationResponseAction.CANCEL;
-  }
-  return NavigationResponseAction.ALLOW;
 }
 
 void javaScriptHandler(
@@ -105,4 +90,52 @@ String getPrice({
   final installmentPrice =
       (double.parse(price) / 4).toStringAsFixed(currency.decimals);
   return installmentPrice;
+}
+
+WebViewController createBaseWebViewController(
+  void Function(JavaScriptMessage) bridgeMessagesHandler,
+) {
+  return WebViewController(
+    onPermissionRequest: (request) async {
+      final resources = request.platform.types.toList();
+      if (resources.isEmpty) {
+        return;
+      }
+
+      final permissions = Platform.isAndroid
+          ? resources
+              .map((r) {
+                final permission =
+                    TabbyPermissionResourceType.toAndroidPermission(r);
+                return permission;
+              })
+              .whereType<Permission>()
+              .toList()
+          : [Permission.camera, Permission.microphone];
+      final statuses = await permissions.request();
+      final isGranted = statuses.values.every((s) => s.isGranted);
+      final future = isGranted ? request.grant : request.deny;
+      await future();
+    },
+  )
+    ..setBackgroundColor(Colors.transparent)
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setOnConsoleMessage((message) {
+      if (kDebugMode) {
+        print('JS: Console.log ${message.message}');
+      }
+    })
+    ..addJavaScriptChannel(
+      TabbySDK.jsBridgeName,
+      onMessageReceived: (message) {
+        if (kDebugMode) {
+          log(
+            'Got message from JS '
+            '[${TabbySDK.jsBridgeName}]: '
+            '${message.message}',
+          );
+        }
+        bridgeMessagesHandler(message);
+      },
+    );
 }

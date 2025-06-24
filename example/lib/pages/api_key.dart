@@ -7,6 +7,11 @@ const _preConfiguredApiKey = String.fromEnvironment(
   defaultValue: '',
 );
 
+const _preConfiguredEnv = String.fromEnvironment(
+  'demoapp.defaultEnv',
+  defaultValue: 'production',
+);
+
 class ApiKeyPage extends StatefulWidget {
   const ApiKeyPage({super.key});
 
@@ -16,10 +21,14 @@ class ApiKeyPage extends StatefulWidget {
 
 class _ApiKeyPageState extends State<ApiKeyPage> {
   late TextEditingController _apiKeyController;
+  Environment _env =
+      _preConfiguredEnv == Environment.staging.name
+          ? Environment.staging
+          : Environment.production;
   String _apiKey = kDebugMode ? _preConfiguredApiKey : '';
 
   void openNextPage() {
-    TabbySDK().setup(withApiKey: _apiKey);
+    TabbySDK().setup(withApiKey: _apiKey, environment: _env);
     Navigator.pushNamed(context, '/home');
   }
 
@@ -41,6 +50,14 @@ class _ApiKeyPageState extends State<ApiKeyPage> {
     });
   }
 
+  void _updateEnvironment(Environment? newEnvironment) {
+    if (newEnvironment != null) {
+      setState(() {
+        _env = newEnvironment;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,10 +67,28 @@ class _ApiKeyPageState extends State<ApiKeyPage> {
       ),
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             const Spacer(),
-            Text('Base url is ${Environment.production.host}'),
+            SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<Environment>(
+                  value: _env,
+                  isExpanded: true,
+                  hint: const Text('Change Environment'),
+                  items:
+                      Environment.values.map((Environment e) {
+                        return DropdownMenuItem<Environment>(
+                          value: e,
+                          child: Text("${e.name.toUpperCase()} (${e.host})"),
+                        );
+                      }).toList(),
+                  onChanged: _updateEnvironment,
+                ),
+              ),
+            ),
             SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0, left: 12, right: 12),

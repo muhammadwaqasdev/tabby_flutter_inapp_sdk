@@ -19,9 +19,6 @@ abstract class TabbyWithRemoteDataSource {
   ///
   /// Throws a [ServerException] for all error codes.
   Future<TabbySession> createSession(TabbyCheckoutPayload payload);
-
-  /// Log analytics event
-  Future<void> logEvent(AnalyticsEvent event, EventProperties properties);
 }
 
 class TabbySDK implements TabbyWithRemoteDataSource {
@@ -35,12 +32,14 @@ class TabbySDK implements TabbyWithRemoteDataSource {
 
   static const String rejectionTextEn = tabbyRejectionTextEn;
   static const String rejectionTextAr = tabbyRejectionTextAr;
-
-  final _anonymousId = uuid.v4();
+  static const String jsBridgeName = 'tabbyMobileSDK';
 
   late final String _apiKey;
   late final String _host;
-  late final String _analyticsHost;
+  late final String _widgetsHost;
+
+  String get publicKey => _apiKey;
+  String get widgetsBaseUrl => _widgetsHost;
 
   @override
   void setup({
@@ -52,7 +51,7 @@ class TabbySDK implements TabbyWithRemoteDataSource {
     }
     _apiKey = withApiKey;
     _host = environment.host;
-    _analyticsHost = environment.analyticsHost;
+    _widgetsHost = environment.widgetsHost;
   }
 
   void checkSetup() {
@@ -99,62 +98,13 @@ class TabbySDK implements TabbyWithRemoteDataSource {
         status: checkoutSession.status,
         paymentId: checkoutSession.payment.id,
         availableProducts: availableProducts,
+        rejectionReason: checkoutSession
+            .configuration.products.installments?.rejectionReason,
       );
       return tabbyCheckoutSession;
     } else {
       debugPrint(response.body);
       throw ServerException();
-    }
-  }
-
-  @override
-  Future<void> logEvent(
-    AnalyticsEvent event,
-    EventProperties properties,
-  ) async {
-    final data = {
-      'anonymousId': _anonymousId,
-      'messageId': uuid.v4(),
-      'properties': {
-        'publicKey': _apiKey,
-        'platformType': 'merchant app',
-        'productType': 'installments',
-        'merchantIntegrationType': 'snippetAndPopup',
-        'planSelected': properties.installmentsCount,
-        'popupType': 'standardWithInfo',
-        'snippetType': 'fullInformation',
-        'merchantCountry': properties.currency.countryName
-      },
-      'mobileSDK': true,
-      'context': {
-        'source': 'flutter-sdk',
-        'direct': true,
-      },
-      'type': 'track',
-      'event': event.name,
-      'timestamp': DateTime.now().toUtc().toIso8601String(),
-      'integrations': {
-        'Segment.io': true,
-      },
-    };
-    if (kDebugMode) {
-      print('Tabby SDK logEvent :: ${jsonEncode(data)}');
-    }
-    try {
-      await http.post(
-        Uri.parse(_analyticsHost),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-SDK-Version': getVersionHeader(),
-          'Authorization': 'Basic ${getHeader()}',
-        },
-        body: jsonEncode(data),
-      );
-    } on Exception catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
     }
   }
 }

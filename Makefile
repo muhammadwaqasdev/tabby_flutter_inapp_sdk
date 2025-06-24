@@ -17,15 +17,20 @@ pre_build:
 	make pg
 
 build_android:
+	make pre_build
+	make env
 	sh scripts/build_android.sh
 
 build_ios:
+	make pre_build
 	make env
 	sh scripts/build_ios.sh
 
 build_both:
-	make build_android
-	make build_ios
+	make pre_build
+	make env
+	sh scripts/build_android.sh
+	sh scripts/build_ios.sh
 
 publish:
 	fvm dart pub publish

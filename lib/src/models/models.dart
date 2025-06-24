@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:tabby_flutter_inapp_sdk/tabby_flutter_inapp_sdk.dart';
 
 import './enums.dart';
@@ -159,16 +161,140 @@ class AvailableProducts {
   final List<ProductWebURL>? installments;
 }
 
+class Products {
+  Products({
+    this.installments,
+  });
+
+  factory Products.fromJson(Map<String, dynamic> json) {
+    return Products(
+      installments: json['installments'] != null
+          ? InstallmentsProduct.fromJson(json['installments'])
+          : null,
+    );
+  }
+
+  final InstallmentsProduct? installments;
+}
+
+class InstallmentsProduct {
+  InstallmentsProduct({
+    required this.type,
+    required this.isAvailable,
+    required this.rejectionReason,
+  });
+
+  factory InstallmentsProduct.fromJson(Map<String, dynamic> json) {
+    return InstallmentsProduct(
+      type: json['type'],
+      isAvailable: json['is_available'],
+      rejectionReason: json['rejection_reason'],
+    );
+  }
+
+  final String type;
+  final bool isAvailable;
+  final String? rejectionReason;
+}
+
 class SessionConfiguration {
-  SessionConfiguration({required this.availableProducts});
+  SessionConfiguration({
+    required this.availableProducts,
+    required this.products,
+  });
 
   factory SessionConfiguration.fromJson(Map<String, dynamic> json) {
     return SessionConfiguration(
       availableProducts: AvailableProducts.fromJson(json['available_products']),
+      products: Products.fromJson(json['products']),
     );
   }
 
   final AvailableProducts availableProducts;
+  final Products products;
+}
+
+class DimentionsEventPayload {
+  const DimentionsEventPayload({
+    required this.width,
+    required this.height,
+  });
+
+  factory DimentionsEventPayload.fromJson(Map<String, dynamic> json) {
+    final w = json['width'];
+    final h = json['height'];
+    return DimentionsEventPayload(
+      width: w is int ? w.toDouble() : w,
+      height: h is int ? h.toDouble() : h,
+    );
+  }
+
+  final double width;
+  final double height;
+
+  @override
+  String toString() {
+    return 'DimentionsEventPayload(width: $width, height: $height)';
+  }
+}
+
+class DimentionsChangeEvent {
+  const DimentionsChangeEvent({
+    required this.type,
+    required this.data,
+  });
+
+  factory DimentionsChangeEvent.fromJson(Map<String, dynamic> json) {
+    return DimentionsChangeEvent(
+      type: JSEventTypeMapper.fromDto(json['type']) ??
+          JSEventType.onChangeDimensions,
+      data: DimentionsEventPayload.fromJson(json['data']),
+    );
+  }
+
+  final JSEventType type;
+  final DimentionsEventPayload data;
+}
+
+class LearnMoreClickedEvent {
+  const LearnMoreClickedEvent({
+    required this.type,
+    required this.url,
+    required this.data,
+  });
+
+  factory LearnMoreClickedEvent.fromJson(Map<String, dynamic> json) {
+    return LearnMoreClickedEvent(
+      type: JSEventTypeMapper.fromDto(json['type']) ??
+          JSEventType.onChangeDimensions,
+      url: json['url'],
+      data: json['data'],
+    );
+  }
+
+  final JSEventType type;
+  final String url;
+  final String data;
+}
+
+// ignore: avoid_classes_with_only_static_members
+class JSEventTypeMapper {
+  static JSEventType? fromDto(String dto) {
+    return JSEventType.values.firstWhere((t) => t.dtoName == dto);
+  }
+}
+
+class InitializationData {
+  InitializationData({required this.data});
+  final type = 'initializationData';
+  final String data;
+
+  String toPayload() {
+    return jsonEncode({
+      type: type,
+      data: data,
+    });
+  }
 }
 
 class CheckoutSession {
@@ -197,6 +323,20 @@ class CheckoutSession {
   final SessionConfiguration configuration;
 }
 
+class Attachment {
+  const Attachment({
+    required this.body,
+    required this.contentType,
+  });
+
+  final String body;
+  final String contentType;
+
+  Map<String, dynamic> toJson() {
+    return {'body': body, 'content_type': contentType};
+  }
+}
+
 // https://docs.tabby.ai/#operation/postCheckoutSession
 class Payment {
   Payment({
@@ -208,6 +348,7 @@ class Payment {
     required this.order,
     required this.orderHistory,
     this.description,
+    this.attachment,
   });
 
   final String amount;
@@ -218,6 +359,7 @@ class Payment {
   final Order order;
   final List<OrderHistoryItem> orderHistory;
   final String? description;
+  final Attachment? attachment;
 
   Map<String, dynamic> toJson() {
     return {
@@ -228,14 +370,13 @@ class Payment {
       'shipping_address': shippingAddress?.toJson(),
       'order': order.toJson(),
       'order_history': orderHistory,
-      'description': description
+      'description': description,
+      'attachment': attachment?.toJson(),
     };
   }
 }
 
 class OrderItem {
-  // 2.00
-
   OrderItem({
     required this.title,
     required this.quantity,
@@ -395,12 +536,14 @@ class TabbySession {
     required this.sessionId,
     required this.paymentId,
     required this.availableProducts,
+    required this.rejectionReason,
   });
 
   final SessionStatus status;
   final String sessionId;
   final String paymentId;
   final TabbySessionAvailableProducts availableProducts;
+  final String? rejectionReason;
 
   @override
   bool operator ==(Object other) =>
@@ -452,24 +595,4 @@ class TransactionStatusResponse {
   final String id;
   final bool isPaid;
   final String? rejectionReason;
-}
-
-class EventProperties {
-  EventProperties({
-    required this.currency,
-    required this.lang,
-    this.installmentsCount,
-  });
-
-  final Currency currency;
-  final Lang lang;
-  final int? installmentsCount;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'currency': currency.displayName,
-      'lang': lang.name,
-      'installments_count': installmentsCount,
-    };
-  }
 }

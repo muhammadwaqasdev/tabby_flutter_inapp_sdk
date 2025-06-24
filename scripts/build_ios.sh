@@ -2,8 +2,6 @@
 
 echo "Building iOS 🛠️"
 
-make pre_build
-
 cd example
 
 fvm flutter build ipa --release

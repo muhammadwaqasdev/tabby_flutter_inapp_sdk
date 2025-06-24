@@ -47,6 +47,7 @@ class _NewSessionState extends State<NewSession> {
     _amountController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _merchantCodeController.dispose();
     super.dispose();
   }
 
@@ -61,16 +62,18 @@ class _NewSessionState extends State<NewSession> {
     try {
       _setStatus('pending');
 
-      final s = await TabbySDK().createSession(TabbyCheckoutPayload(
-        merchantCode: _merchantCode,
-        lang: lang,
-        payment: createMockPayload(
-          amount: _amount,
-          currency: _selectedCurrency,
-          email: _email,
-          phone: _phone,
+      final s = await TabbySDK().createSession(
+        TabbyCheckoutPayload(
+          merchantCode: _merchantCode,
+          lang: lang,
+          payment: createMockPayload(
+            amount: _amount,
+            currency: _selectedCurrency,
+            email: _email,
+            phone: _phone,
+          ),
         ),
-      ));
+      );
 
       debugPrint('Session id: ${s.sessionId}');
 
@@ -86,7 +89,9 @@ class _NewSessionState extends State<NewSession> {
 
   void openCheckOutPage() {
     if (session == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
         const SnackBar(
           content: Text('Session not available'),
         ),
@@ -95,16 +100,19 @@ class _NewSessionState extends State<NewSession> {
     }
     if (session!.status == SessionStatus.rejected) {
       final rejectionText =
-          lang == Lang.ar ? TabbySDK.rejectionTextAr : TabbySDK.rejectionTextEn;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(rejectionText),
-        ),
-      );
+          session!.rejectionReason ??
+          (lang == Lang.ar
+              ? TabbySDK.rejectionTextAr
+              : TabbySDK.rejectionTextEn);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(rejectionText)));
       return;
     }
     if (session!.availableProducts.installments == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
         const SnackBar(
           content: Text('Session has no products'),
         ),
@@ -122,7 +130,9 @@ class _NewSessionState extends State<NewSession> {
 
   void openInAppBrowser() {
     if (session == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
         const SnackBar(
           content: Text('Session not available'),
         ),
@@ -132,15 +142,15 @@ class _NewSessionState extends State<NewSession> {
     if (session!.status == SessionStatus.rejected) {
       final rejectionText =
           lang == Lang.ar ? TabbySDK.rejectionTextAr : TabbySDK.rejectionTextEn;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(rejectionText),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(rejectionText)));
       return;
     }
     if (session!.availableProducts.installments == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
         const SnackBar(
           content: Text('Session has no products'),
         ),
@@ -151,11 +161,9 @@ class _NewSessionState extends State<NewSession> {
       context: context,
       webUrl: session!.availableProducts.installments!.webUrl,
       onResult: (WebViewResult resultCode) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(resultCode.name),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(resultCode.name)));
         Navigator.pop(context);
       },
     );
@@ -203,7 +211,8 @@ class _NewSessionState extends State<NewSession> {
 
   @override
   Widget build(BuildContext context) {
-    final isReadyToSubmit = _amount.isNotEmpty &&
+    final isReadyToSubmit =
+        _amount.isNotEmpty &&
         _email.isNotEmpty &&
         _phone.isNotEmpty &&
         _merchantCode.isNotEmpty;
@@ -262,12 +271,13 @@ class _NewSessionState extends State<NewSession> {
                             value: _selectedCurrency,
                             isExpanded: true,
                             hint: const Text('Select Currency'),
-                            items: Currency.values.map((Currency currency) {
-                              return DropdownMenuItem<Currency>(
-                                value: currency,
-                                child: Text(currency.name.toUpperCase()),
-                              );
-                            }).toList(),
+                            items:
+                                Currency.values.map((Currency currency) {
+                                  return DropdownMenuItem<Currency>(
+                                    value: currency,
+                                    child: Text(currency.name.toUpperCase()),
+                                  );
+                                }).toList(),
                             onChanged: _updateCurrency,
                           ),
                         ),
@@ -327,45 +337,47 @@ class _NewSessionState extends State<NewSession> {
               const Spacer(),
               session == null
                   ? ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      onPressed: !isReadyToSubmit
-                          ? null
-                          : _status == 'pending'
-                              ? noop
-                              : createSession,
-                      child: _status == 'pending'
-                          ? const SizedBox(
+                      elevation: 0,
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                    ),
+                    onPressed:
+                        !isReadyToSubmit
+                            ? null
+                            : _status == 'pending'
+                            ? noop
+                            : createSession,
+                    child:
+                        _status == 'pending'
+                            ? const SizedBox(
                               width: 24.0, // Set desired width
                               height: 24.0, // Set desired height
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Create Session'),
-                    )
+                            : const Text('Create Session'),
+                  )
                   : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      onPressed: openInAppBrowser,
-                      child: const Text('Open checkout in-app browser'),
+                      elevation: 0,
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
                     ),
+                    onPressed: openInAppBrowser,
+                    child: const Text('Open checkout in-app browser'),
+                  ),
               const SizedBox(height: 8),
             ],
           ),

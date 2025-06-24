@@ -72,3 +72,6 @@ example/ios/Flutter/flutter_export_environment.sh
 # Secrets
 .secure_files/
 scripts/.env_version
+ios/Flutter/ephemeral/*
+example/android/fastlane/report.xml
+example/ios/fastlane/report.xml

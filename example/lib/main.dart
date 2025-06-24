@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('en', ''), Locale('ar', '')],
-      locale: const Locale('en', ''), // Use it for check Arabic locale
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      locale: const Locale('en'), // Use it for check Arabic locale
       theme: ThemeData(primarySwatch: Colors.green),
       home: const ApiKeyPage(),
       routes: {
