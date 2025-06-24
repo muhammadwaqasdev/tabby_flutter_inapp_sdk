@@ -120,11 +120,6 @@ WebViewController createBaseWebViewController(
   )
     ..setBackgroundColor(Colors.transparent)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setOnConsoleMessage((message) {
-      if (kDebugMode) {
-        print('JS: Console.log ${message.message}');
-      }
-    })
     ..addJavaScriptChannel(
       TabbySDK.jsBridgeName,
       onMessageReceived: (message) {
