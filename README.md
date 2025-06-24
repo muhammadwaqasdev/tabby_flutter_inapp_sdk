@@ -12,11 +12,7 @@ Use the Tabby checkout in your Flutter app.
 ## 1️⃣ Adding Android and iOS-specific configuration
 
 #### Why this is even needed?
-We use `flutter_inappwebview` and `flutter-permission-handler` as a dependencies.
-
-For any clarification and making sure we're not requesting more than we have to, please refer to https://inappwebview.dev/docs/intro/#enable-camera-for-html-inputs
-
-In order to be able to use camera in a webview, for example, for taking images through <input type="file" accept="image/*" capture> HTML tag, you need to ask camera permissionand also a microphone permission. Tabby SDK will handle it for you and pass permissions request from a webview to the native side, but you need to add these permissions to your Android and iOS-specific files
+We use `webview_flutter` and `permission_handler` as a dependencies.
 
 Tabby might ask user to go through a verification process, which requires live check with camera and and that's why we need to ask for camera permission.
 
