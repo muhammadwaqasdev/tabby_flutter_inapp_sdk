@@ -3,7 +3,7 @@
 - Getting rid of deprecated `TabbyPresentationSnippetNonStantard`
 - ❗️ Breaking change: Getting rid of deprecated `TabbyPresentationSnippet`. Please use `TabbyProductPageSnippet` instead - it's an easy migration
 - 🆕 Adding new web-view based dynamic `TabbyProductPageSnippet`
-- Lowering code dependency on `flutter_inappwebview` package
+- Lowering code dependency on `flutter_inappwebview` package, using `webview_flutter` instead
 
 # 1.9.0
 - Updating example app to the latest Flutter version
