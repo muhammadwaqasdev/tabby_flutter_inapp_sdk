@@ -1,3 +1,6 @@
+# 1.10.1
+- Minor fix: removing `setOnConsoleMessage` as not needed
+
 # 1.10.0
 - Getting rid of deprecated `TabbyCheckoutSnippet`
 - Getting rid of deprecated `TabbyPresentationSnippetNonStantard`
