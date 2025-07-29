@@ -8,11 +8,8 @@ const tabbyColor = Color.fromRGBO(62, 237, 191, 1);
 typedef TabbyCheckoutCompletion = void Function(WebViewResult resultCode);
 
 class TabbyWebView extends StatefulWidget {
-  const TabbyWebView({
-    required this.webUrl,
-    required this.onResult,
-    Key? key,
-  }) : super(key: key);
+  const TabbyWebView({required this.webUrl, required this.onResult, Key? key})
+    : super(key: key);
 
   final String webUrl;
   final TabbyCheckoutCompletion onResult;
@@ -29,13 +26,18 @@ class TabbyWebView extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       enableDrag: false,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.94,
-          child: TabbyWebView(
-            webUrl: webUrl,
-            onResult: onResult,
-          ),
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.94,
+          minChildSize: 0.5,
+          maxChildSize: 0.94,
+          builder: (context, scrollController) {
+            return _KeyboardResponsiveBottomSheet(
+              child: TabbyWebView(webUrl: webUrl, onResult: onResult),
+            );
+          },
         );
       },
     );
@@ -86,15 +88,37 @@ class _TabbyWebViewState extends State<TabbyWebView> {
             value: _progress,
             color: tabbyColor,
             backgroundColor: Colors.black,
-          )
+          ),
         ],
         Expanded(
           key: webViewKey,
-          child: WebViewWidget(
-            controller: webViewController,
-          ),
+          child: WebViewWidget(controller: webViewController),
         ),
       ],
+    );
+  }
+}
+
+class _KeyboardResponsiveBottomSheet extends StatelessWidget {
+  final Widget child;
+
+  const _KeyboardResponsiveBottomSheet({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: child,
+      ),
     );
   }
 }
